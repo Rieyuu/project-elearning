@@ -1,13 +1,15 @@
-import { Router } from 'express';
-import userRoutes from './user-routes';
-import authRoutes from './auth-routes';
+const router = require('express').Router();
 
-const router = Router();
+// handle semua route /api/auth ke router otentikasi
+router.use('/auth', require('./auth-routes'));
 
-// Auth routes (tidak memerlukan autentikasi)
-router.use('/auth', authRoutes);
+// handle semua route /api/users ke router user
+router.use('/users', require('./user-routes'));
 
-// User routes (memerlukan autentikasi)
-router.use('/users', userRoutes);
+// handle semua route /api/courses ke router course
+router.use('/courses', require('./course-routes'));
 
-export default router;
+// handle semua route /api/enrollments ke router enrollment
+router.use('/enrollments', require('./enrollment-routes'));
+
+module.exports = router;

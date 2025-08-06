@@ -1,28 +1,24 @@
-import { Router } from 'express';
-import * as userController from '../controllers/user-controller';
-import { authenticateToken } from '../middleware/auth-middleware';
+const router = require('express').Router();
 
-const router = Router();
+const authenticationMiddleware = require('../middlewares/authentication-middleware');
+const onlyAdminMiddleware = require('../middlewares/only-admin-middleware');
+const userController = require('../controllers/user-controller');
 
-// Semua routes user memerlukan autentikasi
-router.use(authenticateToken);
-
-// GET /api/users - Mendapatkan semua users
+// GET /api/users
 router.get('/', userController.index);
 
-// GET /api/users/count - Mendapatkan jumlah users
-router.get('/count', userController.count);
+// GET /api/users/:id -> bisa diakses admin dan student (student hanya data diri sendiri)
+router.get('/:id', authenticationMiddleware, userController.getById);
 
-// POST /api/users - Membuat user baru
-router.post('/', userController.store);
+// PATCH /api/users
+router.patch('/', authenticationMiddleware, userController.update);
 
-// GET /api/users/:id - Mendapatkan user by ID
-router.get('/:id', userController.show);
+// DELETE /api/users/:id -> hanya boleh oleh ADMIN
+router.delete(
+  '/:id',
+  authenticationMiddleware,
+  onlyAdminMiddleware,
+  userController.deleteById,
+);
 
-// PATCH /api/users/:id - Update user (partial update)
-router.patch('/:id', userController.update);
-
-// DELETE /api/users/:id - Hapus user
-router.delete('/:id', userController.destroy);
-
-export default router;
+module.exports = router;
