@@ -1,18 +1,11 @@
-import { Router } from 'express';
-import { AuthController } from '../controllers/auth-controller';
+const router = require('express').Router();
 
-const router = Router();
+const authController = require('../controllers/auth-controller');
 
-// Register user baru
-router.post('/register', AuthController.register);
+// POST /api/auth/register
+router.post('/register', authController.register);
 
-// Login user
-router.post('/login', AuthController.login);
+// POST /api/auth/login
+router.post('/login', authController.login);
 
-// Logout user
-router.post('/logout/:userId', AuthController.logout);
-
-// Refresh token
-router.post('/refresh-token', AuthController.refreshToken);
-
-export default router; 
+module.exports = router;

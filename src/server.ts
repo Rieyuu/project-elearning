@@ -1,8 +1,9 @@
-import express from 'express';
-import apiRoutes from './routes';
-
+// inisialisasi
+require('dotenv').config();
+const express = require('express');
+const apiRoutes = require('./routes');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // middleware request body, jika diperlukan
 app.use(express.json());

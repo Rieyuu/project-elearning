@@ -1,31 +1,58 @@
-import { UserModel, UserData } from '../models/user-model';
+import { UserData } from '../models/user-model';
+import storedUsers from '../data/user-data';
 
-// GET - Mendapatkan semua users
-export const getUsers = async (): Promise<UserData[]> => {
-  return await UserModel.getAllUsers();
+// cari user berdasarkan id nya
+const findUserById = (id: number): UserData | undefined => {
+  return storedUsers.find((user: UserData) => user.id == id);
+};
+exports.findUserById = findUserById;
+
+// dapatkan user berdasarkan id dengan authorization check
+exports.getUserById = (id: number, currentUserId: number, currentUserRole: string): UserData | undefined => {
+  const user = findUserById(id);
+  
+  // Jika user tidak ditemukan
+  if (!user) return undefined;
+  
+  // Jika admin, bisa akses semua user
+  if (currentUserRole === 'admin') return user;
+  
+  // Jika student, hanya bisa akses data dirinya sendiri
+  if (currentUserRole === 'student' && currentUserId === id) return user;
+  
+  // Jika bukan admin dan bukan data diri sendiri, return undefined
+  return undefined;
 };
 
-// GET - Mendapatkan user by ID
-export const getUserById = async (id: number): Promise<UserData | null> => {
-  return await UserModel.getUserById(id);
+// dapatkan semua user
+exports.getUsers = (): UserData[] => {
+  return storedUsers || [];
 };
 
-// POST - Membuat user baru
-export const createUser = async (userData: Omit<UserData, 'id'>): Promise<UserData> => {
-  return await UserModel.createUser(userData);
+// ubah data user
+exports.updateUserById = (
+  id: number,
+  input: UserData,
+): UserData | undefined => {
+  const user = findUserById(id);
+  if (!user) return undefined;
+
+  Object.assign(user, input);
+  return user;
 };
 
-// PUT - Update user existing
-export const updateUser = async (id: number, userData: Partial<Omit<UserData, 'id'>>): Promise<UserData | null> => {
-  return await UserModel.updateUser(id, userData);
-};
+// hapus data user berdasarkan id nya
+exports.deleteUserById = (
+  id: number,
+): UserData | undefined => {
+  const user = findUserById(id);
+  if (!user) return undefined;
 
-// DELETE - Hapus user
-export const deleteUser = async (id: number): Promise<boolean> => {
-  return await UserModel.deleteUser(id);
-};
+  const index = storedUsers.indexOf(user);
+  if (index !== -1) {
+    storedUsers.splice(index, 1);
+    return user;
+  }
 
-// GET - Jumlah users
-export const getUsersCount = async (): Promise<number> => {
-  return await UserModel.getUsersCount();
+  return undefined;
 };

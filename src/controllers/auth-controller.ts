@@ -1,135 +1,85 @@
 import { Request, Response } from 'express';
-import { AuthService, RegisterData, LoginData } from '../services/auth-service';
 
-export class AuthController {
-  // Register user baru
-  static async register(req: Request, res: Response) {
-    try {
-      const userData: RegisterData = req.body;
+const authService = require('../services/auth-service');
 
-      // Validasi input
-      if (!userData.username || !userData.email || !userData.password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Username, email, dan password diperlukan'
-        });
-      }
+// registrasi user
+exports.register = async (req: Request, res: Response) => {
+  const input = req.body;
+  const requiredFields: string[] = [
+    'email', 'password', 'name', 'tanggalLahir',
+    'sudahLulus', 'skorKeseluruhan',
+  ];
 
-      // Validasi email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(userData.email)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Format email tidak valid'
-        });
-      }
-
-      // Validasi password minimal 6 karakter
-      if (userData.password.length < 6) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password minimal 6 karakter'
-        });
-      }
-
-      const result = await AuthService.register(userData);
-      
-      if (result.success) {
-        res.status(201).json(result);
-      } else {
-        res.status(400).json(result);
-      }
-    } catch (error) {
-      console.error('Error in register controller:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Terjadi kesalahan internal server'
+  try {
+    // cek apakah semua required fields ada di input
+    if (!requiredFields.every(prop => prop in input)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: 'Input harus lengkap!',
       });
     }
-  }
-
-  // Login user
-  static async login(req: Request, res: Response) {
-    try {
-      const loginData: LoginData = req.body;
-
-      // Validasi input
-      if (!loginData.email || !loginData.password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email dan password diperlukan'
-        });
-      }
-
-      const result = await AuthService.login(loginData);
-      
-      if (result.success) {
-        res.status(200).json(result);
-      } else {
-        res.status(401).json(result);
-      }
-    } catch (error) {
-      console.error('Error in login controller:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Terjadi kesalahan internal server'
+    
+    // cek apakah akun sudah terdaftar
+    if (authService.findUserByEmail(input.email)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: 'Akun sudah terdaftar!',
       });
     }
+
+    // daftarkan akun ke penyimpanan data
+    const registeredUser = await authService.register(input);
+
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'Akun baru telah terdaftar!',
+      data: registeredUser,
+    });
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({
+      statusCode: 500,
+      message: 'Error internal server!',
+    });
   }
+};
 
-  // Logout user
-  static async logout(req: Request, res: Response) {
-    try {
-      const userId = parseInt(req.params.userId || req.body.userId);
-      
-      if (!userId) {
-        return res.status(400).json({
-          success: false,
-          message: 'User ID diperlukan'
-        });
-      }
+// login user
+exports.login = async (req: Request, res: Response) => {
+  const input = req.body;
+  const requiredFields: string[] = ['email', 'password'];
 
-      const result = await AuthService.logout(userId);
-      
-      if (result.success) {
-        res.status(200).json(result);
-      } else {
-        res.status(404).json(result);
-      }
-    } catch (error) {
-      console.error('Error in logout controller:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Terjadi kesalahan internal server'
+  try {
+    // cek apakah semua required fields ada di input
+    if (!requiredFields.every(prop => prop in input)) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: 'Input harus lengkap!',
       });
     }
-  }
 
-  // Refresh token
-  static async refreshToken(req: Request, res: Response) {
-    try {
-      const { refreshToken } = req.body;
-
-      if (!refreshToken) {
-        return res.status(400).json({
-          success: false,
-          message: 'Refresh token diperlukan'
-        });
-      }
-
-      const result = await AuthService.refreshToken(refreshToken);
-      
-      if (result.success) {
-        res.status(200).json(result);
-      } else {
-        res.status(401).json(result);
-      }
-    } catch (error) {
-      console.error('Error in refresh token controller:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Terjadi kesalahan internal server'
+    // cek apakah akun belum terdaftar
+    const user = await authService.findAccount(input.email, input.password);
+    if (!user) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'Akun tidak ditemukan!',
       });
     }
+
+    // otentikasi pengguna dengan memberikan JWT token
+    const token = authService.authenticate(user);
+
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'Berhasil login!',
+      data: { user, token },
+    });
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({
+      statusCode: 500,
+      message: 'Error internal server!',
+    });
   }
-} 
+};
