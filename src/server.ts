@@ -1,18 +1,19 @@
-import { createServer } from 'http';
+import express from 'express';
+import apiRoutes from './routes';
 
+const app = express();
 const PORT = 3000;
 
-const server = createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/') {
-    res.setHeader('Content-Type', 'application/json');
-    res.statusCode = 200;
-    res.end(JSON.stringify({ message: 'Halo dari metode GET!' }));
-  } else {
-    res.statusCode = 404;
-    res.end('Endpoint tidak ditemukan!');
-  }
-});
+// middleware request body, jika diperlukan
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-server.listen(PORT, () => {
+// handle seluruh request /api/* ke route API
+app.use('/api', apiRoutes);
+
+// event loop
+app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });
+
+export default app;
