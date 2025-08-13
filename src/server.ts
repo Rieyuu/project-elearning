@@ -1,7 +1,8 @@
 // inisialisasi
-require('dotenv').config();
-const express = require('express');
-const apiRoutes = require('./routes');
+import 'dotenv/config';
+import express from 'express';
+import apiRoutes from './routes';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

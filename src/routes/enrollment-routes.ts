@@ -1,25 +1,20 @@
-const router = require('express').Router();
+import express from 'express';
+import { authenticationMiddleware } from '../middlewares/authentication-middleware';
+import { onlyAdminMiddleware } from '../middlewares/only-admin-middleware';
+import { index, getById, getByUserId, create, update, deleteById } from '../controllers/enrollment-controller';
 
-const authenticationMiddleware = require('../middlewares/authentication-middleware');
-const onlyAdminMiddleware = require('../middlewares/only-admin-middleware');
-const enrollmentController = require('../controllers/enrollment-controller');
+const router = express.Router();
 
-// GET /api/enrollments - hanya admin
-router.get('/', authenticationMiddleware, onlyAdminMiddleware, enrollmentController.index);
+// Routes yang hanya bisa diakses oleh admin
+router.get('/', authenticationMiddleware, onlyAdminMiddleware, index);
+router.patch('/:id', authenticationMiddleware, onlyAdminMiddleware, update);
 
-// GET /api/enrollments/:id - bisa diakses user (dengan authorization)
-router.get('/:id', authenticationMiddleware, enrollmentController.getById);
+// Routes yang bisa diakses oleh user yang terautentikasi
+router.get('/:id', authenticationMiddleware, getById);
 
-// GET /api/enrollments/user/:userId - bisa diakses user (dengan authorization)
-router.get('/user/:userId', authenticationMiddleware, enrollmentController.getByUserId);
+// Routes yang bisa diakses oleh student (non-admin)
+router.get('/user/:userId', authenticationMiddleware, getByUserId);
+router.post('/', authenticationMiddleware, create);
+router.delete('/:id', authenticationMiddleware, deleteById);
 
-// POST /api/enrollments - bisa diakses semua user yang sudah login
-router.post('/', authenticationMiddleware, enrollmentController.create);
-
-// PATCH /api/enrollments/:id - hanya admin
-router.patch('/:id', authenticationMiddleware, onlyAdminMiddleware, enrollmentController.update);
-
-// DELETE /api/enrollments/:id - bisa diakses user (dengan authorization)
-router.delete('/:id', authenticationMiddleware, enrollmentController.deleteById);
-
-module.exports = router; 
+export default router; 

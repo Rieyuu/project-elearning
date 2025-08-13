@@ -1,22 +1,21 @@
-const router = require('express').Router();
+import express from 'express';
+import { authenticationMiddleware } from '../middlewares/authentication-middleware';
+import { onlyAdminMiddleware } from '../middlewares/only-admin-middleware';
+import { index, getById, create, update, deleteById } from '../controllers/course-controller';
 
-const authenticationMiddleware = require('../middlewares/authentication-middleware');
-const onlyAdminMiddleware = require('../middlewares/only-admin-middleware');
-const courseController = require('../controllers/course-controller');
+const router = express.Router();
 
-// GET /api/courses - bisa diakses semua user
-router.get('/', courseController.index);
+// Routes yang bisa diakses oleh semua user yang terautentikasi
+router.get('/', authenticationMiddleware, index);
+router.get('/:id', authenticationMiddleware, getById);
 
-// GET /api/courses/:id - bisa diakses semua user
-router.get('/:id', courseController.getById);
+// Routes yang hanya bisa diakses oleh admin
+router.post('/', authenticationMiddleware, onlyAdminMiddleware, create);
+router.patch('/:id', authenticationMiddleware, onlyAdminMiddleware, update);
+router.delete('/:id', authenticationMiddleware, onlyAdminMiddleware, deleteById);
 
-// POST /api/courses - hanya admin
-router.post('/', authenticationMiddleware, onlyAdminMiddleware, courseController.create);
+// Routes yang bisa diakses oleh student (non-admin)
+router.get('/enrolled', authenticationMiddleware, getById);
+router.get('/available', authenticationMiddleware, index);
 
-// PATCH /api/courses/:id - hanya admin
-router.patch('/:id', authenticationMiddleware, onlyAdminMiddleware, courseController.update);
-
-// DELETE /api/courses/:id - hanya admin
-router.delete('/:id', authenticationMiddleware, onlyAdminMiddleware, courseController.deleteById);
-
-module.exports = router; 
+export default router; 
