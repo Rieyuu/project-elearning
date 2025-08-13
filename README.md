@@ -1,226 +1,217 @@
-# Project E-Learning Day 3
+# E-Learning Platform API
 
-## Deskripsi
-Project e-learning dengan sistem autentikasi, manajemen user, course, dan enrollment menggunakan **PostgreSQL** sebagai database.
+A comprehensive e-learning platform backend API built with Node.js, Express, and TypeScript. This project provides a robust foundation for managing users, courses, and enrollments with role-based access control.
 
-## Fitur yang Tersedia
+## 🚀 Features
 
-### 1. Authentication
-- Login user
-- Register user baru
+### 🔐 Authentication & Authorization
+- JWT-based authentication system
+- Role-based access control (Admin/Student)
+- Secure password hashing with bcrypt
+- Protected API endpoints
 
-### 2. User Management
-- GET `/api/users` - Mendapatkan semua user (admin only)
-- GET `/api/users/:id` - Mendapatkan user berdasarkan ID (admin bisa akses semua, student hanya data diri sendiri)
-- PATCH `/api/users` - Update data user (user yang sudah login)
-- DELETE `/api/users/:id` - Hapus user berdasarkan ID (admin only)
+### 👥 User Management
+- User registration and login
+- Profile management
+- Role-based permissions
+- Student progress tracking
 
-### 3. Course Management
-- GET `/api/courses` - Mendapatkan semua course (bisa diakses semua user)
-- GET `/api/courses/:id` - Mendapatkan course berdasarkan ID (bisa diakses semua user)
-- POST `/api/courses` - Membuat course baru (admin only)
-- PATCH `/api/courses/:id` - Update course berdasarkan ID (admin only)
-- DELETE `/api/courses/:id` - Hapus course berdasarkan ID (admin only)
+### 📚 Course Management
+- Create, read, update, and delete courses
+- Course status management (active/inactive)
+- Instructor assignment
+- Duration and pricing configuration
 
-### 4. Enrollment System
-- GET `/api/enrollments` - Mendapatkan semua enrollment (admin only)
-- GET `/api/enrollments/:id` - Mendapatkan enrollment berdasarkan ID (dengan authorization)
-- GET `/api/enrollments/user/:userId` - Mendapatkan enrollment berdasarkan user ID (dengan authorization)
-- POST `/api/enrollments` - Membuat enrollment baru (user yang sudah login)
-- PATCH `/api/enrollments/:id` - Update enrollment berdasarkan ID (admin only)
-- DELETE `/api/enrollments/:id` - Hapus enrollment berdasarkan ID (dengan authorization)
+### 🎓 Enrollment System
+- Course enrollment management
+- Progress tracking (0-100%)
+- Score recording
+- Status management (pending/approved/rejected/completed)
 
-## Teknologi yang Digunakan
+## 🛠️ Technology Stack
 
-- **Backend**: Node.js + Express + TypeScript
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Language**: TypeScript
 - **Database**: PostgreSQL
 - **Authentication**: JWT + bcrypt
 - **Architecture**: Repository Pattern + Service Layer
+- **Development**: Nodemon for hot reloading
 
-## Struktur Data
-
-### User
-```typescript
-{
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-  tanggalLahir: Date;
-  sudahLulus: boolean;
-  skorKeseluruhan: number;
-  role: 'admin' | 'student';
-}
-```
-
-### Course
-```typescript
-{
-  id: number;
-  title: string;
-  description: string;
-  instructor: string;
-  duration: number; // dalam menit
-  price: number;
-  status: 'active' | 'inactive';
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-### Enrollment
-```typescript
-{
-  id: number;
-  userId: number;
-  courseId: number;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  enrolledAt: Date;
-  completedAt?: Date;
-  progress: number; // 0-100
-  score?: number; // 0-100
-}
-```
-
-## Authorization Rules
-
-### User Endpoints
-- **GET /api/users** - Hanya admin
-- **GET /api/users/:id** - Admin bisa akses semua, student hanya data diri sendiri
-- **PATCH /api/users** - User yang sudah login
-- **DELETE /api/users/:id** - Hanya admin
-
-### Course Endpoints
-- **GET /api/courses** - Semua user
-- **GET /api/courses/:id** - Semua user
-- **POST /api/courses** - Hanya admin
-- **PATCH /api/courses/:id** - Hanya admin
-- **DELETE /api/courses/:id** - Hanya admin
-
-### Enrollment Endpoints
-- **GET /api/enrollments** - Hanya admin
-- **GET /api/enrollments/:id** - Admin bisa akses semua, student hanya enrollment sendiri
-- **GET /api/enrollments/user/:userId** - Admin bisa akses semua, student hanya enrollment sendiri
-- **POST /api/enrollments** - User yang sudah login
-- **PATCH /api/enrollments/:id** - Hanya admin
-- **DELETE /api/enrollments/:id** - Admin bisa hapus semua, student hanya enrollment sendiri
-
-## Setup dan Instalasi
-
-### Prerequisites
-1. **PostgreSQL** - Pastikan PostgreSQL sudah terinstall
-2. **Node.js** - Pastikan Node.js dan npm sudah terinstall
-
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Setup Database
-```bash
-# Buat database PostgreSQL
-psql -U postgres
-CREATE DATABASE elearning_db;
-\q
-
-# Buat file .env dengan konfigurasi database
-# Lihat DATABASE_SETUP.md untuk detail
-```
-
-### 3. Jalankan Migrations
-```bash
-npm run db:migrate
-```
-
-### 4. Jalankan Seeders
-```bash
-npm run db:seed
-```
-
-### 5. Jalankan Server
-```bash
-npm run dev
-```
-
-Server akan berjalan di `http://localhost:3000`
-
-## Database Commands
-
-```bash
-# Reset database (hapus semua data)
-npm run db:reset
-
-# Jalankan migrations
-npm run db:migrate
-
-# Jalankan seeders
-npm run db:seed
-```
-
-## Struktur Project
+## 📁 Project Structure
 
 ```
 src/
-├── controllers/          # HTTP controllers
+├── controllers/          # HTTP request handlers
 ├── database/            # Database configuration & migrations
-│   ├── config.ts        # Database connection
-│   ├── migrations/      # Database migrations
-│   └── seeders/         # Database seeders
+│   ├── config.ts        # Database connection settings
+│   ├── migrations/      # Database schema migrations
+│   └── seeders/         # Sample data population
 ├── interfaces/          # TypeScript interfaces
 ├── middlewares/         # Express middlewares
 ├── models/              # Data models
 ├── repositories/        # Data access layer
-├── routes/              # API routes
+├── routes/              # API route definitions
 ├── services/            # Business logic layer
 └── types/               # TypeScript type definitions
 ```
 
-## Contoh Penggunaan
+## 🗄️ Database Schema
 
-### Login
-```bash
-POST /api/auth/login
-{
-  "email": "userpertama@elearning.com",
-  "password": "password123"
-}
-```
+### Users Table
+- `id`: Primary key
+- `name`: User's full name
+- `email`: Unique email address
+- `password`: Hashed password
+- `tanggalLahir`: Date of birth
+- `sudahLulus`: Graduation status
+- `skorKeseluruhan`: Overall score
+- `role`: User role (admin/student)
 
-### Mendapatkan Course
-```bash
-GET /api/courses
-```
+### Courses Table
+- `id`: Primary key
+- `title`: Course title
+- `description`: Course description
+- `instructor`: Instructor name
+- `duration`: Course duration in minutes
+- `price`: Course price
+- `status`: Course status (active/inactive)
+- `createdAt`: Creation timestamp
+- `updatedAt`: Last update timestamp
 
-### Enroll ke Course
-```bash
-POST /api/enrollments
-{
-  "courseId": 1
-}
-```
+### Enrollments Table
+- `id`: Primary key
+- `userId`: Foreign key to users table
+- `courseId`: Foreign key to courses table
+- `status`: Enrollment status
+- `enrolledAt`: Enrollment timestamp
+- `completedAt`: Completion timestamp (optional)
+- `progress`: Progress percentage (0-100)
+- `score`: Final score (0-100, optional)
 
-### Mendapatkan Enrollment User
-```bash
-GET /api/enrollments/user/2
-```
+## 🔑 API Endpoints
 
-## Dokumentasi Lebih Lanjut
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
 
-- **Database Setup**: Lihat [DATABASE_SETUP.md](./DATABASE_SETUP.md)
-- **API Documentation**: Lihat [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
-- **Role Based Access Control**: Lihat [ROLE_BASED_ACCESS_CONTROL.md](./ROLE_BASED_ACCESS_CONTROL.md)
-- **Service Repository Pattern**: Lihat [SERVICE_REPOSITORY_PATTERN.md](./SERVICE_REPOSITORY_PATTERN.md)
+### Users
+- `GET /api/users` - Get all users (admin only)
+- `GET /api/users/:id` - Get user by ID
+- `PATCH /api/users` - Update user profile
+- `DELETE /api/users/:id` - Delete user (admin only)
 
-## Development
+### Courses
+- `GET /api/courses` - Get all courses
+- `GET /api/courses/:id` - Get course by ID
+- `POST /api/courses` - Create new course (admin only)
+- `PATCH /api/courses/:id` - Update course (admin only)
+- `DELETE /api/courses/:id` - Delete course (admin only)
 
-### Menambah Migration Baru
-1. Buat file baru di `src/database/migrations/`
-2. Export fungsi `up()` dan `down()`
-3. Tambahkan ke `src/database/migrations/index.ts`
-4. Jalankan `npm run db:migrate`
+### Enrollments
+- `GET /api/enrollments` - Get all enrollments (admin only)
+- `GET /api/enrollments/:id` - Get enrollment by ID
+- `GET /api/enrollments/user/:userId` - Get user enrollments
+- `POST /api/enrollments` - Create new enrollment
+- `PATCH /api/enrollments/:id` - Update enrollment (admin only)
+- `DELETE /api/enrollments/:id` - Delete enrollment
 
-### Menambah Seeder Baru
-1. Buat file baru di `src/database/seeders/`
-2. Export fungsi seeder
-3. Tambahkan ke `src/database/seeders/index.ts`
-4. Jalankan `npm run db:seed`
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- PostgreSQL (v12 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd project-elearning
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create a `.env` file in the root directory:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=elearning_db
+   DB_USER=your_username
+   DB_PASSWORD=your_password
+   JWT_SECRET=your_jwt_secret
+   PORT=3000
+   ```
+
+4. **Set up the database**
+   ```bash
+   # Create database
+   createdb elearning_db
+   
+   # Run migrations
+   npm run db:migrate
+   
+   # Seed with sample data
+   npm run db:seed
+   ```
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+The API will be available at `http://localhost:3000`
+
+## 📚 Available Scripts
+
+- `npm run dev` - Start development server with nodemon
+- `npm run build` - Build TypeScript to JavaScript
+- `npm start` - Start production server
+- `npm run db:migrate` - Run database migrations
+- `npm run db:seed` - Seed database with sample data
+- `npm run db:reset` - Reset database (clear all data)
+
+## 🔒 Security Features
+
+- **Password Hashing**: All passwords are hashed using bcrypt
+- **JWT Authentication**: Secure token-based authentication
+- **Role-Based Access Control**: Different permissions for admin and student users
+- **Input Validation**: Request data validation and sanitization
+- **Protected Routes**: Middleware-based route protection
+
+## 🧪 Testing
+
+The project includes sample data and endpoints for testing:
+
+- **Admin User**: `admin@elearning.com` / `admin123`
+- **Student User**: `student@elearning.com` / `student123`
+- **Sample Courses**: Pre-populated with various course examples
+- **Sample Enrollments**: Demonstrates the enrollment workflow
+
+## 📖 API Documentation
+
+For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with Express.js and TypeScript
+- Database management with PostgreSQL
+- Authentication powered by JWT and bcrypt
+- Architecture following Repository and Service patterns
