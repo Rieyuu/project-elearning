@@ -1,13 +1,20 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/authenticated-request-type';
+import { EnrollmentService } from '../services/enrollment-service';
+import { CourseService } from '../services/course-service';
+import { EnrollmentRepository } from '../repositories/enrollment-repository';
+import { CourseRepository } from '../repositories/course-repository';
 
-const enrollmentService = require('../services/enrollment-service');
-const courseService = require('../services/course-service');
+// Create instances directly
+const enrollmentRepository = new EnrollmentRepository();
+const courseRepository = new CourseRepository();
+const enrollmentService = new EnrollmentService(enrollmentRepository);
+const courseService = new CourseService(courseRepository);
 
 // mendapatkan list enrollments (hanya admin)
-exports.index = async (req: Request, res: Response) => {
+export const index = async (req: Request, res: Response) => {
   try {
-    const enrollmentData = enrollmentService.getEnrollments();
+    const enrollmentData = await enrollmentService.getAllEnrollments();
 
     if (!enrollmentData || enrollmentData.length === 0) {
       return res.status(404).json({
@@ -31,13 +38,20 @@ exports.index = async (req: Request, res: Response) => {
 };
 
 // mendapatkan enrollment berdasarkan id
-exports.getById = async (req: AuthenticatedRequest, res: Response) => {
+export const getById = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({
+      statusCode: 401,
+      message: 'User tidak terautentikasi!',
+    });
+  }
+
   const enrollmentId = parseInt(req.params.id);
   const currentUserId = req.user.id;
   const currentUserRole = req.user.role;
 
   try {
-    const enrollment = enrollmentService.getEnrollmentById(enrollmentId);
+    const enrollment = await enrollmentService.getEnrollmentById(enrollmentId);
     
     if (!enrollment) {
       return res.status(404).json({
@@ -69,7 +83,14 @@ exports.getById = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // mendapatkan enrollment berdasarkan user id
-exports.getByUserId = async (req: AuthenticatedRequest, res: Response) => {
+export const getByUserId = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({
+      statusCode: 401,
+      message: 'User tidak terautentikasi!',
+    });
+  }
+
   const userId = parseInt(req.params.userId);
   const currentUserId = req.user.id;
   const currentUserRole = req.user.role;
@@ -83,7 +104,7 @@ exports.getByUserId = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const enrollments = enrollmentService.getEnrollmentsByUserId(userId);
+    const enrollments = await enrollmentService.getUserEnrollments(userId);
 
     return res.status(200).json({
       statusCode: 200,
@@ -100,7 +121,14 @@ exports.getByUserId = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // membuat enrollment baru
-exports.create = async (req: AuthenticatedRequest, res: Response) => {
+export const create = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({
+      statusCode: 401,
+      message: 'User tidak terautentikasi!',
+    });
+  }
+
   const input = req.body;
   const currentUserId = req.user.id;
 
@@ -114,7 +142,7 @@ exports.create = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     // cek apakah course ada
-    const course = courseService.findCourseById(input.courseId);
+    const course = await courseService.getCourseById(input.courseId);
     if (!course) {
       return res.status(404).json({
         statusCode: 404,
@@ -123,20 +151,15 @@ exports.create = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     // cek apakah user sudah enroll ke course ini
-    const isAlreadyEnrolled = enrollmentService.isUserEnrolledInCourse(currentUserId, input.courseId);
-    if (isAlreadyEnrolled) {
+    const existingEnrollment = await enrollmentService.findEnrollment(currentUserId, input.courseId);
+    if (existingEnrollment) {
       return res.status(400).json({
         statusCode: 400,
         message: 'Anda sudah terdaftar di course ini!',
       });
     }
 
-    const newEnrollment = enrollmentService.createEnrollment({
-      userId: currentUserId,
-      courseId: input.courseId,
-      status: 'pending',
-      progress: 0,
-    });
+    const newEnrollment = await enrollmentService.enrollUserInCourse(currentUserId, input.courseId);
 
     return res.status(201).json({
       statusCode: 201,
@@ -153,12 +176,12 @@ exports.create = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // update enrollment berdasarkan id (hanya admin)
-exports.update = async (req: AuthenticatedRequest, res: Response) => {
+export const update = async (req: AuthenticatedRequest, res: Response) => {
   const enrollmentId = parseInt(req.params.id);
   const input = req.body;
 
   try {
-    const enrollment = enrollmentService.findEnrollmentById(enrollmentId);
+    const enrollment = await enrollmentService.getEnrollmentById(enrollmentId);
     if (!enrollment) {
       return res.status(404).json({
         statusCode: 404,
@@ -166,7 +189,7 @@ exports.update = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const updatedEnrollment = enrollmentService.updateEnrollmentById(enrollmentId, input);
+    const updatedEnrollment = await enrollmentService.updateEnrollment(enrollmentId, input);
 
     return res.status(200).json({
       statusCode: 200,
@@ -183,13 +206,20 @@ exports.update = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // hapus enrollment berdasarkan id
-exports.deleteById = async (req: AuthenticatedRequest, res: Response) => {
+export const deleteById = async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({
+      statusCode: 401,
+      message: 'User tidak terautentikasi!',
+    });
+  }
+
   const enrollmentId = parseInt(req.params.id);
   const currentUserId = req.user.id;
   const currentUserRole = req.user.role;
 
   try {
-    const enrollment = enrollmentService.findEnrollmentById(enrollmentId);
+    const enrollment = await enrollmentService.getEnrollmentById(enrollmentId);
     if (!enrollment) {
       return res.status(404).json({
         statusCode: 404,
@@ -205,12 +235,19 @@ exports.deleteById = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const deletedEnrollment = enrollmentService.deleteEnrollmentById(enrollmentId);
+    const isDeleted = await enrollmentService.deleteEnrollment(enrollmentId);
+
+    if (!isDeleted) {
+      return res.status(500).json({
+        statusCode: 500,
+        message: 'Gagal menghapus enrollment!',
+      });
+    }
 
     return res.status(200).json({
       statusCode: 200,
       message: 'Berhasil hapus enrollment!',
-      data: deletedEnrollment,
+      data: enrollment,
     });
   } catch (error: any) {
     console.error(error);

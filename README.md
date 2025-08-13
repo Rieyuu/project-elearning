@@ -1,7 +1,7 @@
 # Project E-Learning Day 3
 
 ## Deskripsi
-Project e-learning dengan sistem autentikasi, manajemen user, course, dan enrollment.
+Project e-learning dengan sistem autentikasi, manajemen user, course, dan enrollment menggunakan **PostgreSQL** sebagai database.
 
 ## Fitur yang Tersedia
 
@@ -29,6 +29,13 @@ Project e-learning dengan sistem autentikasi, manajemen user, course, dan enroll
 - POST `/api/enrollments` - Membuat enrollment baru (user yang sudah login)
 - PATCH `/api/enrollments/:id` - Update enrollment berdasarkan ID (admin only)
 - DELETE `/api/enrollments/:id` - Hapus enrollment berdasarkan ID (dengan authorization)
+
+## Teknologi yang Digunakan
+
+- **Backend**: Node.js + Express + TypeScript
+- **Database**: PostgreSQL
+- **Authentication**: JWT + bcrypt
+- **Architecture**: Repository Pattern + Service Layer
 
 ## Struktur Data
 
@@ -98,19 +105,75 @@ Project e-learning dengan sistem autentikasi, manajemen user, course, dan enroll
 - **PATCH /api/enrollments/:id** - Hanya admin
 - **DELETE /api/enrollments/:id** - Admin bisa hapus semua, student hanya enrollment sendiri
 
-## Cara Menjalankan
+## Setup dan Instalasi
 
-1. Install dependencies:
+### Prerequisites
+1. **PostgreSQL** - Pastikan PostgreSQL sudah terinstall
+2. **Node.js** - Pastikan Node.js dan npm sudah terinstall
+
+### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-2. Jalankan server:
+### 2. Setup Database
+```bash
+# Buat database PostgreSQL
+psql -U postgres
+CREATE DATABASE elearning_db;
+\q
+
+# Buat file .env dengan konfigurasi database
+# Lihat DATABASE_SETUP.md untuk detail
+```
+
+### 3. Jalankan Migrations
+```bash
+npm run db:migrate
+```
+
+### 4. Jalankan Seeders
+```bash
+npm run db:seed
+```
+
+### 5. Jalankan Server
 ```bash
 npm run dev
 ```
 
-3. Server akan berjalan di `http://localhost:3000`
+Server akan berjalan di `http://localhost:3000`
+
+## Database Commands
+
+```bash
+# Reset database (hapus semua data)
+npm run db:reset
+
+# Jalankan migrations
+npm run db:migrate
+
+# Jalankan seeders
+npm run db:seed
+```
+
+## Struktur Project
+
+```
+src/
+├── controllers/          # HTTP controllers
+├── database/            # Database configuration & migrations
+│   ├── config.ts        # Database connection
+│   ├── migrations/      # Database migrations
+│   └── seeders/         # Database seeders
+├── interfaces/          # TypeScript interfaces
+├── middlewares/         # Express middlewares
+├── models/              # Data models
+├── repositories/        # Data access layer
+├── routes/              # API routes
+├── services/            # Business logic layer
+└── types/               # TypeScript type definitions
+```
 
 ## Contoh Penggunaan
 
@@ -140,3 +203,24 @@ POST /api/enrollments
 ```bash
 GET /api/enrollments/user/2
 ```
+
+## Dokumentasi Lebih Lanjut
+
+- **Database Setup**: Lihat [DATABASE_SETUP.md](./DATABASE_SETUP.md)
+- **API Documentation**: Lihat [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+- **Role Based Access Control**: Lihat [ROLE_BASED_ACCESS_CONTROL.md](./ROLE_BASED_ACCESS_CONTROL.md)
+- **Service Repository Pattern**: Lihat [SERVICE_REPOSITORY_PATTERN.md](./SERVICE_REPOSITORY_PATTERN.md)
+
+## Development
+
+### Menambah Migration Baru
+1. Buat file baru di `src/database/migrations/`
+2. Export fungsi `up()` dan `down()`
+3. Tambahkan ke `src/database/migrations/index.ts`
+4. Jalankan `npm run db:migrate`
+
+### Menambah Seeder Baru
+1. Buat file baru di `src/database/seeders/`
+2. Export fungsi seeder
+3. Tambahkan ke `src/database/seeders/index.ts`
+4. Jalankan `npm run db:seed`

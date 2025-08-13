@@ -1,67 +1,34 @@
-import { UserData } from '../models/user-model';
-import storedUsers from '../data/user-data';
+import { IUserService } from '../interfaces/service.interface';
+import jwt from 'jsonwebtoken';
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+export class AuthService {
+  constructor(private userService: IUserService) {}
 
-const JWT_SECRET = process.env.JWT_SECRET || 'rahasia';
+  async login(email: string, password: string): Promise<{ user: any; token: string } | null> {
+    const user = await this.userService.authenticateUser(email, password);
+    if (!user) return null;
 
-// cari user berdasarakan email
-const findUserByEmail = (email: string): UserData | undefined => {
-  return storedUsers.find((user: UserData) => user.email === email);
-};
-exports.findUserByEmail = findUserByEmail;
-
-// cari akun pengguna
-exports.findAccount = async (
-  email: string,
-  password: string,
-): Promise<UserData | undefined> => {
-  const user = findUserByEmail(email);
-
-  if (user) {
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
-    if (isPasswordMatch) {
-      return user;
-    }
+    const token = this.generateToken(user);
+    return { user, token };
   }
 
-  return undefined;
-};
+  private generateToken(user: any): string {
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
 
-// simpan user ke storedUsers (penyimpanan sementara)
-exports.register = async (
-  input: UserData,
-): Promise<UserData> => {
-  const hashedPassword = await bcrypt.hash(input.password, 10);
-  input.password = hashedPassword;
+    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    return jwt.sign(payload, secret, { expiresIn: '24h' });
+  }
 
-  // secara default, assign role menjadi 'student'
-  input.role = 'student';
-
-  // auto-increment id
-  const maxId = storedUsers.length > 0
-    ? Math.max(...storedUsers.map((user: UserData) => user.id))
-    : 0;
-  input.id = maxId + 1;
-
-  storedUsers.push(input);
-
-  return storedUsers[storedUsers.length - 1];
-};
-
-// otentikasi pengguna dengan memberikan token JWT
-exports.authenticate = (user: UserData) => {
-  const payload = {
-    sub: user.id, // JWT subject claim
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
-
-  const token = jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '1h',
-  });
-
-  return token;
-};
+  verifyToken(token: string): any {
+    try {
+      const secret = process.env.JWT_SECRET || 'your-secret-key';
+      return jwt.verify(token, secret);
+    } catch (error) {
+      return null;
+    }
+  }
+}

@@ -1,9 +1,15 @@
 import { Request, Response } from 'express';
+import { AuthService } from '../services/auth-service';
+import { UserService } from '../services/user-service';
+import { UserRepository } from '../repositories/user-repository';
 
-const authService = require('../services/auth-service');
+// Create instances directly
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
+const authService = new AuthService(userService);
 
 // registrasi user
-exports.register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response) => {
   const input = req.body;
   const requiredFields: string[] = [
     'email', 'password', 'name', 'tanggalLahir',
@@ -20,7 +26,8 @@ exports.register = async (req: Request, res: Response) => {
     }
     
     // cek apakah akun sudah terdaftar
-    if (authService.findUserByEmail(input.email)) {
+    const existingUser = await userService.authenticateUser(input.email, input.password);
+    if (existingUser) {
       return res.status(400).json({
         statusCode: 400,
         message: 'Akun sudah terdaftar!',
@@ -28,7 +35,7 @@ exports.register = async (req: Request, res: Response) => {
     }
 
     // daftarkan akun ke penyimpanan data
-    const registeredUser = await authService.register(input);
+    const registeredUser = await userService.createUser(input);
 
     return res.status(200).json({
       statusCode: 200,
@@ -45,7 +52,7 @@ exports.register = async (req: Request, res: Response) => {
 };
 
 // login user
-exports.login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response) => {
   const input = req.body;
   const requiredFields: string[] = ['email', 'password'];
 
@@ -58,22 +65,19 @@ exports.login = async (req: Request, res: Response) => {
       });
     }
 
-    // cek apakah akun belum terdaftar
-    const user = await authService.findAccount(input.email, input.password);
-    if (!user) {
+    // otentikasi pengguna dengan memberikan JWT token
+    const result = await authService.login(input.email, input.password);
+    if (!result) {
       return res.status(404).json({
         statusCode: 404,
-        message: 'Akun tidak ditemukan!',
+        message: 'Email atau password salah!',
       });
     }
-
-    // otentikasi pengguna dengan memberikan JWT token
-    const token = authService.authenticate(user);
 
     return res.status(200).json({
       statusCode: 200,
       message: 'Berhasil login!',
-      data: { user, token },
+      data: result,
     });
   } catch (error: any) {
     console.error(error);

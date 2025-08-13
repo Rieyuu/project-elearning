@@ -1,24 +1,23 @@
-const router = require('express').Router();
+import express from 'express';
+import { authenticationMiddleware } from '../middlewares/authentication-middleware';
+import { onlyAdminMiddleware } from '../middlewares/only-admin-middleware';
+import { getById, update, index, create, deleteById } from '../controllers/user-controller';
 
-const authenticationMiddleware = require('../middlewares/authentication-middleware');
-const onlyAdminMiddleware = require('../middlewares/only-admin-middleware');
-const userController = require('../controllers/user-controller');
+const router = express.Router();
 
-// GET /api/users
-router.get('/', userController.index);
+// Routes yang memerlukan autentikasi
+router.get('/:id', authenticationMiddleware, getById);
 
-// GET /api/users/:id -> bisa diakses admin dan student (student hanya data diri sendiri)
-router.get('/:id', authenticationMiddleware, userController.getById);
+// Routes yang hanya bisa diakses oleh user yang sedang login (update profile sendiri)
+router.patch('/profile', authenticationMiddleware, update);
 
-// PATCH /api/users
-router.patch('/', authenticationMiddleware, userController.update);
+// Routes yang hanya bisa diakses oleh admin
+router.get('/', authenticationMiddleware, onlyAdminMiddleware, index);
+router.post('/', authenticationMiddleware, onlyAdminMiddleware, create);
+router.patch('/:id', authenticationMiddleware, onlyAdminMiddleware, update);
+router.delete('/:id', authenticationMiddleware, onlyAdminMiddleware, deleteById);
 
-// DELETE /api/users/:id -> hanya boleh oleh ADMIN
-router.delete(
-  '/:id',
-  authenticationMiddleware,
-  onlyAdminMiddleware,
-  userController.deleteById,
-);
+// Routes yang bisa diakses oleh student (non-admin)
+router.get('/enrollments', authenticationMiddleware, getById);
 
-module.exports = router;
+export default router;

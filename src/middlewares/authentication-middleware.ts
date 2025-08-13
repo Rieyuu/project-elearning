@@ -12,7 +12,7 @@ interface JwtPayload {
   role?: string;
 }
 
-const authenticationMiddleware = (
+export const authenticationMiddleware = (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
@@ -48,5 +48,3 @@ const authenticationMiddleware = (
     });
   }
 };
-
-module.exports = authenticationMiddleware;

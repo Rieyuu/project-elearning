@@ -1,12 +1,16 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/authenticated-request-type';
+import { CourseService } from '../services/course-service';
+import { CourseRepository } from '../repositories/course-repository';
 
-const courseService = require('../services/course-service');
+// Create instances directly
+const courseRepository = new CourseRepository();
+const courseService = new CourseService(courseRepository);
 
 // mendapatkan list courses
-exports.index = async (req: Request, res: Response) => {
+export const index = async (req: Request, res: Response) => {
   try {
-    const courseData = courseService.getCourses();
+    const courseData = await courseService.getAllCourses();
 
     if (!courseData || courseData.length === 0) {
       return res.status(404).json({
@@ -30,11 +34,11 @@ exports.index = async (req: Request, res: Response) => {
 };
 
 // mendapatkan course berdasarkan id
-exports.getById = async (req: Request, res: Response) => {
+export const getById = async (req: Request, res: Response) => {
   const courseId = parseInt(req.params.id);
 
   try {
-    const course = courseService.getCourseById(courseId);
+    const course = await courseService.getCourseById(courseId);
     
     if (!course) {
       return res.status(404).json({
@@ -58,7 +62,7 @@ exports.getById = async (req: Request, res: Response) => {
 };
 
 // membuat course baru (hanya admin)
-exports.create = async (req: AuthenticatedRequest, res: Response) => {
+export const create = async (req: AuthenticatedRequest, res: Response) => {
   const input = req.body;
 
   try {
@@ -70,7 +74,7 @@ exports.create = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const newCourse = courseService.createCourse(input);
+    const newCourse = await courseService.createCourse(input);
 
     return res.status(201).json({
       statusCode: 201,
@@ -87,12 +91,12 @@ exports.create = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // update course berdasarkan id (hanya admin)
-exports.update = async (req: AuthenticatedRequest, res: Response) => {
+export const update = async (req: AuthenticatedRequest, res: Response) => {
   const courseId = parseInt(req.params.id);
   const input = req.body;
 
   try {
-    const course = courseService.findCourseById(courseId);
+    const course = await courseService.getCourseById(courseId);
     if (!course) {
       return res.status(404).json({
         statusCode: 404,
@@ -100,7 +104,7 @@ exports.update = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const updatedCourse = courseService.updateCourseById(courseId, input);
+    const updatedCourse = await courseService.updateCourse(courseId, input);
 
     return res.status(200).json({
       statusCode: 200,
@@ -117,11 +121,11 @@ exports.update = async (req: AuthenticatedRequest, res: Response) => {
 };
 
 // hapus course berdasarkan id (hanya admin)
-exports.deleteById = async (req: AuthenticatedRequest, res: Response) => {
+export const deleteById = async (req: AuthenticatedRequest, res: Response) => {
   const courseId = parseInt(req.params.id);
 
   try {
-    const course = courseService.findCourseById(courseId);
+    const course = await courseService.getCourseById(courseId);
     if (!course) {
       return res.status(404).json({
         statusCode: 404,
@@ -129,12 +133,19 @@ exports.deleteById = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    const deletedCourse = courseService.deleteCourseById(courseId);
+    const isDeleted = await courseService.deleteCourse(courseId);
+
+    if (!isDeleted) {
+      return res.status(500).json({
+        statusCode: 500,
+        message: 'Gagal menghapus course!',
+      });
+    }
 
     return res.status(200).json({
       statusCode: 200,
       message: 'Berhasil hapus course!',
-      data: deletedCourse,
+      data: course,
     });
   } catch (error: any) {
     console.error(error);
