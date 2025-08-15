@@ -7,21 +7,30 @@
 		"dev": "nodemon",
 		"build": "tsc",
 		"start": "node dist/server.js",
-		"db:migrate": "ts-node src/database/migrate.ts",
-		"db:seed": "ts-node src/database/seeders/index.ts",
-		"db:reset": "ts-node src/database/reset.ts"
+		"db:migrate": "knex migrate:latest",
+		"db:migrate:make": "knex migrate:make",
+		"db:migrate:rollback": "knex migrate:rollback",
+		"db:seed": "knex seed:run",
+		"db:seed:make": "knex seed:make",
+		"db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run"
 	},
 	"dependencies": {
 		"bcrypt": "^6.0.0",
+		"cloudinary": "^2.7.0",
 		"dotenv": "^17.2.0",
 		"express": "^5.1.0",
 		"jsonwebtoken": "^9.0.2",
+		"knex": "^3.1.0",
+		"multer": "^2.0.2",
+		"objection": "^3.1.5",
+		"objection-softdelete": "^3.0.1",
 		"pg": "^8.11.3",
 		"@types/pg": "^8.10.9"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^6.0.0",
 		"@types/express": "^5.0.1",
+		"@types/multer": "^2.0.0",
 		"@types/node": "^22.15.2",
 		"nodemon": "^3.1.10",
 		"ts-node": "^10.9.2",

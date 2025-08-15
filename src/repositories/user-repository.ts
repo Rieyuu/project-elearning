@@ -1,4 +1,5 @@
 import { IUserRepository } from '../interfaces/repository.interface';
+// Using plain objects mapped from DB; the ORM model is not used directly here
 import { UserData } from '../models/user-model';
 import pool from '../database/config';
 
@@ -12,6 +13,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,
@@ -34,6 +36,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,
@@ -56,6 +59,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,
@@ -75,6 +79,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,
@@ -89,13 +94,14 @@ export class UserRepository implements IUserRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        INSERT INTO users (name, email, password, tanggal_lahir, sudah_lulus, skor_keseluruhan, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO users (name, email, password, avatar, tanggal_lahir, sudah_lulus, skor_keseluruhan, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
       `, [
         data.name,
         data.email,
         data.password,
+        (data as any).avatar || null,
         data.tanggalLahir.toISOString().split('T')[0],
         data.sudahLulus,
         data.skorKeseluruhan,
@@ -108,6 +114,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,
@@ -136,6 +143,10 @@ export class UserRepository implements IUserRepository {
       if (data.password !== undefined) {
         fields.push(`password = $${paramCount++}`);
         values.push(data.password);
+      }
+      if ((data as any).avatar !== undefined) {
+        fields.push(`avatar = $${paramCount++}`);
+        values.push((data as any).avatar);
       }
       if (data.tanggalLahir !== undefined) {
         fields.push(`tanggal_lahir = $${paramCount++}`);
@@ -172,6 +183,7 @@ export class UserRepository implements IUserRepository {
         name: row.name,
         email: row.email,
         password: row.password,
+        avatar: row.avatar,
         tanggalLahir: new Date(row.tanggal_lahir),
         sudahLulus: row.sudah_lulus,
         skorKeseluruhan: row.skor_keseluruhan,

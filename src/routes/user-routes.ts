@@ -1,7 +1,11 @@
 import express from 'express';
+import multer from 'multer';
 import { authenticationMiddleware } from '../middlewares/authentication-middleware';
 import { onlyAdminMiddleware } from '../middlewares/only-admin-middleware';
 import { getById, update, index, create, deleteById } from '../controllers/user-controller';
+
+// In-line multer config (memory storage)
+const upload = multer();
 
 const router = express.Router();
 
@@ -9,7 +13,7 @@ const router = express.Router();
 router.get('/:id', authenticationMiddleware, getById);
 
 // Routes yang hanya bisa diakses oleh user yang sedang login (update profile sendiri)
-router.patch('/profile', authenticationMiddleware, update);
+router.patch('/profile', authenticationMiddleware, upload.single('avatar'), update);
 
 // Routes yang hanya bisa diakses oleh admin
 router.get('/', authenticationMiddleware, onlyAdminMiddleware, index);

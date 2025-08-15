@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/authenticated-request-type';
 import { UserService } from '../services/user-service';
+import * as filesystem from '../utilities/filesystem';
 import { UserRepository } from '../repositories/user-repository';
 
 // Create instances directly
@@ -44,6 +45,7 @@ export const update = async (req: AuthenticatedRequest, res: Response) => {
 
   const userId = req.user.id;
   const input = req.body;
+  const file = (req as any).file as Express.Multer.File | undefined;
 
   try {
     // cek apakah user ada
@@ -53,6 +55,19 @@ export const update = async (req: AuthenticatedRequest, res: Response) => {
         statusCode: 404,
         message: 'User tidak ditemukan!',
       });
+    }
+
+    // If avatar provided, upload and set path
+    if (file) {
+      try {
+        if ((user as any).avatar) {
+          await (filesystem as any).remove((user as any).avatar);
+        }
+        const avatarPath = await (filesystem as any).upload(file, 'avatars');
+        (input as any).avatar = avatarPath;
+      } catch (err: any) {
+        return res.status(400).json({ statusCode: 400, message: `Gagal upload avatar: ${err.message}` });
+      }
     }
 
     // update data user
@@ -91,6 +106,15 @@ export const deleteById = async (req: AuthenticatedRequest, res: Response) => {
         statusCode: 404,
         message: 'User tidak ditemukan!',
       });
+    }
+
+    // hapus avatar jika ada
+    try {
+      if ((user as any).avatar) {
+        await (filesystem as any).remove((user as any).avatar);
+      }
+    } catch (removeErr) {
+      console.error('Gagal menghapus avatar user:', removeErr);
     }
 
     // hapus user

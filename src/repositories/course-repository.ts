@@ -11,6 +11,7 @@ export class CourseRepository implements ICourseRepository {
         title: row.title,
         description: row.description,
         instructor: row.instructor,
+        image: row.image,
         duration: row.duration,
         price: row.price,
         status: row.status,
@@ -34,6 +35,7 @@ export class CourseRepository implements ICourseRepository {
         title: row.title,
         description: row.description,
         instructor: row.instructor,
+        image: row.image,
         duration: row.duration,
         price: row.price,
         status: row.status,
@@ -89,13 +91,14 @@ export class CourseRepository implements ICourseRepository {
     const client = await pool.connect();
     try {
       const result = await client.query(`
-        INSERT INTO courses (title, description, instructor, duration, price, status)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO courses (title, description, instructor, image, duration, price, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `, [
         data.title,
         data.description,
         data.instructor,
+        data.image || null,
         data.duration,
         data.price,
         data.status || 'active'
@@ -107,6 +110,7 @@ export class CourseRepository implements ICourseRepository {
         title: row.title,
         description: row.description,
         instructor: row.instructor,
+        image: row.image,
         duration: row.duration,
         price: row.price,
         status: row.status,
@@ -140,6 +144,10 @@ export class CourseRepository implements ICourseRepository {
       if (data.duration !== undefined) {
         fields.push(`duration = $${paramCount++}`);
         values.push(data.duration);
+      }
+      if (data.image !== undefined) {
+        fields.push(`image = $${paramCount++}`);
+        values.push(data.image);
       }
       if (data.price !== undefined) {
         fields.push(`price = $${paramCount++}`);
