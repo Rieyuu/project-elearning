@@ -14,4 +14,6 @@ router.use('/users', userRoutes);
 router.use('/courses', courseRoutes);
 router.use('/enrollments', enrollmentRoutes);
 
+// v2 routes removed; integrating uploads into existing routes
+
 export default router;

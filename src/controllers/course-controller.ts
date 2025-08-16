@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../types/authenticated-request-type';
 import { CourseService } from '../services/course-service';
+import * as filesystem from '../utilities/filesystem';
 import { CourseRepository } from '../repositories/course-repository';
 
 // Create instances directly
@@ -64,6 +65,7 @@ export const getById = async (req: Request, res: Response) => {
 // membuat course baru (hanya admin)
 export const create = async (req: AuthenticatedRequest, res: Response) => {
   const input = req.body;
+  const file = (req as any).file as Express.Multer.File | undefined;
 
   try {
     // validasi input
@@ -72,6 +74,16 @@ export const create = async (req: AuthenticatedRequest, res: Response) => {
         statusCode: 400,
         message: 'Title, description, dan instructor harus diisi!',
       });
+    }
+
+    // Upload image if provided
+    if (file) {
+      try {
+        const imagePath = await (filesystem as any).upload(file, 'courses');
+        input.image = imagePath;
+      } catch (err: any) {
+        return res.status(400).json({ statusCode: 400, message: `Gagal upload image: ${err.message}` });
+      }
     }
 
     const newCourse = await courseService.createCourse(input);
@@ -94,6 +106,7 @@ export const create = async (req: AuthenticatedRequest, res: Response) => {
 export const update = async (req: AuthenticatedRequest, res: Response) => {
   const courseId = parseInt(req.params.id);
   const input = req.body;
+  const file = (req as any).file as Express.Multer.File | undefined;
 
   try {
     const course = await courseService.getCourseById(courseId);
@@ -102,6 +115,20 @@ export const update = async (req: AuthenticatedRequest, res: Response) => {
         statusCode: 404,
         message: 'Course tidak ditemukan!',
       });
+    }
+
+    // If new image provided, replace it
+    if (file) {
+      try {
+        // Remove old image if exists
+        if ((course as any).image) {
+          await (filesystem as any).remove((course as any).image);
+        }
+        const imagePath = await (filesystem as any).upload(file, 'courses');
+        input.image = imagePath;
+      } catch (err: any) {
+        return res.status(400).json({ statusCode: 400, message: `Gagal upload image: ${err.message}` });
+      }
     }
 
     const updatedCourse = await courseService.updateCourse(courseId, input);
@@ -131,6 +158,15 @@ export const deleteById = async (req: AuthenticatedRequest, res: Response) => {
         statusCode: 404,
         message: 'Course tidak ditemukan!',
       });
+    }
+
+    // Remove image file if exists
+    try {
+      if ((course as any).image) {
+        await (filesystem as any).remove((course as any).image);
+      }
+    } catch (removeErr) {
+      console.error('Gagal menghapus file gambar course:', removeErr);
     }
 
     const isDeleted = await courseService.deleteCourse(courseId);

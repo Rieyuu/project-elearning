@@ -1,11 +1,20 @@
-export interface CourseData {
-  id: number;
-  title: string;
-  description: string;
-  instructor: string;
-  duration: number; // dalam menit
-  price: number;
-  status: 'active' | 'inactive';
-  createdAt: Date;
-  updatedAt: Date;
+const Model = require('../config/database/orm');
+
+export class Course extends Model {
+  static softDelete = true;
+  static tableName = 'courses';
+
+  id!: number;
+  title!: string;
+  slug!: string;
+  description!: string;
+  image!: string;
+  created_at?: Date;
+  updated_at?: Date;
+  deleted_at?: Date;
+
+  // Knex query helper
+  static get knex() {
+    return require('../config/database/query-builder');
+  }
 } 
